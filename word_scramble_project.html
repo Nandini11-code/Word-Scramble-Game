@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Pastel Word Scramble</title>
+
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Poppins', sans-serif; }
+
+body {
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: linear-gradient(135deg, #ffd6e7, #d6f0ff, #e6d6ff);
+  overflow: hidden;
+}
+
+/* Flowers */
+.flower {
+  position: absolute;
+  font-size: 22px;
+  animation: float 12s linear infinite;
+  opacity: 0.6;
+}
+@keyframes float {
+  from { transform: translateY(100vh) rotate(0deg); }
+  to { transform: translateY(-10vh) rotate(360deg); }
+}
+
+.card {
+  background: #fff7fb;
+  padding: 40px;
+  border-radius: 18px;
+  text-align: center;
+  width: 420px;
+  box-shadow: 0 15px 40px rgba(0,0,0,0.1);
+  border: 2px solid #f3d9ff;
+}
+
+h1 { color: #7a5cff; margin-bottom: 15px; }
+
+.scrambled {
+  font-size: 32px;
+  letter-spacing: 6px;
+  margin-bottom: 10px;
+}
+
+.timer {
+  font-size: 14px;
+  color: #888;
+  margin-bottom: 15px;
+}
+
+input {
+  padding: 12px;
+  width: 100%;
+  border-radius: 10px;
+  border: 2px solid #e8d5ff;
+  margin-bottom: 15px;
+}
+
+button {
+  padding: 10px 20px;
+  border-radius: 10px;
+  border: none;
+  background: linear-gradient(45deg, #b388ff, #7a5cff);
+  color: white;
+  cursor: pointer;
+  margin: 5px;
+}
+
+.message { margin-top: 10px; height: 24px; font-weight: 600; }
+.correct { color: #ff6ec7; }
+.wrong { color: #ff7b7b; }
+
+#gameScreen, #endScreen { display: none; }
+</style>
+</head>
+
+<body>
+
+<!-- Flowers -->
+<div class="flower" style="left:10%">🌸</div>
+<div class="flower" style="left:30%; animation-delay:2s">🌼</div>
+<div class="flower" style="left:50%; animation-delay:4s">🌷</div>
+<div class="flower" style="left:70%; animation-delay:1s">🌸</div>
+<div class="flower" style="left:85%; animation-delay:3s">🌼</div>
+
+<!-- Start -->
+<div class="card" id="startScreen">
+  <h1>Word Scramble 🌸</h1>
+  <input type="text" id="playerName" placeholder="Enter your name..." />
+  <button onclick="startGame()">Start Game 🎮</button>
+</div>
+
+<!-- Game -->
+<div class="card" id="gameScreen">
+  <h1 id="welcome"></h1>
+  <div class="scrambled" id="scrambled">WORD</div>
+  <div class="timer">⏳ Time left: <span id="time">10</span>s</div>
+  <input type="text" id="guess" placeholder="Type your guess..." />
+  <button onclick="checkWord()">Submit</button>
+  <button onclick="nextWord()">Skip</button>
+  <div class="message" id="message"></div>
+</div>
+
+<!-- End -->
+<div class="card" id="endScreen">
+  <h1>Game Over 🎀</h1>
+  <p id="finalMsg"></p>
+  <button onclick="location.reload()">Play Again 💖</button>
+</div>
+
+<script>
+const words = ["design","flower","coding","pastel","dream","cloud","butter","pretty","soft","purple","kitten","smile"];
+
+let player = "";
+let currentWord = "";
+let score = 0;
+let question = 0;
+let totalQuestions = 10;
+
+let timer;
+let timeLeft = 10;
+
+// Start
+function startGame() {
+  const name = document.getElementById("playerName").value.trim();
+  if (!name) return alert("Enter your name 💕");
+
+  player = name;
+  document.getElementById("welcome").textContent = "Hi " + player + " 🌸";
+
+  document.getElementById("startScreen").style.display = "none";
+  document.getElementById("gameScreen").style.display = "block";
+
+  nextWord();
+}
+
+// Shuffle
+function shuffle(word) {
+  return word.split('').sort(() => Math.random() - 0.5).join('');
+}
+
+// Timer
+function startTimer() {
+  timeLeft = 10;
+  document.getElementById("time").textContent = timeLeft;
+
+  timer = setInterval(() => {
+    timeLeft--;
+    document.getElementById("time").textContent = timeLeft;
+
+    if (timeLeft <= 0) {
+      clearInterval(timer);
+      showWrong("Time up ⏳");
+      setTimeout(nextWord, 2000);
+    }
+  }, 2000);
+}
+
+// Next Word
+function nextWord() {
+  clearInterval(timer);
+
+  if (question >= totalQuestions) return endGame();
+
+  question++;
+  const random = words[Math.floor(Math.random() * words.length)];
+  currentWord = random;
+
+  document.getElementById("scrambled").textContent = shuffle(random).toUpperCase();
+  document.getElementById("guess").value = "";
+  document.getElementById("message").textContent = "";
+
+  startTimer();
+}
+
+// Check answer
+function checkWord() {
+  clearInterval(timer);
+  const input = document.getElementById("guess").value.toLowerCase();
+
+  if (input === currentWord) {
+    score++;
+    showCorrect();
+  } else {
+    showWrong("Better luck next time ☹️");
+  }
+
+  setTimeout(nextWord, 1200);
+}
+
+function showCorrect() {
+  const msg = document.getElementById("message");
+  msg.textContent = "Yahoo " + player + " 🌟";
+  msg.className = "message correct";
+}
+
+function showWrong(text) {
+  const msg = document.getElementById("message");
+  msg.textContent = text + ", " + player;
+  msg.className = "message wrong";
+}
+
+// End
+function endGame() {
+  document.getElementById("gameScreen").style.display = "none";
+  document.getElementById("endScreen").style.display = "block";
+  document.getElementById("finalMsg").textContent =
+    player + ", you scored " + score + " out of 10 💖";
+}
+</script>
+
+</body>
+</html>
